@@ -1,0 +1,11 @@
+curl https://api.snapcut.ai/v1/remove-background \
+  -H "Authorization: Bearer $SNAPCUT_KEY" \
+  -F "image=@product.png"
+
+# 200 OK
+# {
+#   "id": "sc_01J...",
+#   "status": "complete",
+#   "result_url": "https://res.cloudinary.com/.../transparent.png",
+#   "expires_at": "2026-10-19T12:00:00Z"
+# }

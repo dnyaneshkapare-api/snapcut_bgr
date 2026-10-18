@@ -1,0 +1,24 @@
+{
+  "name": "SnapCut AI · Process background removal",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    { "name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "parameters": { "httpMethod": "POST", "path": "snapcut-process", "responseMode": "responseNode" }, "position": [0, 0] },
+    { "name": "Payload Validation", "type": "n8n-nodes-base.code", "parameters": { "jsCode": "const body = $json.body ?? $json;\nif (!body.fileUrl || !body.userId || !body.originalName) throw new Error('fileUrl, userId and originalName are required');\nreturn [{ json: body }];" }, "position": [220, 0] },
+    { "name": "Cloudinary Fetch", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "GET", "url": "={{ $json.fileUrl }}", "responseFormat": "file" }, "position": [440, 0] },
+    { "name": "AI API Request", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "POST", "url": "={{ $env.REMOVE_BG_ENDPOINT }}", "sendBody": true, "contentType": "multipart-form-data", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth" }, "position": [660, 0] },
+    { "name": "Response Validation", "type": "n8n-nodes-base.code", "parameters": { "jsCode": "if (!$binary?.data) throw new Error('AI provider returned no image');\nreturn items;" }, "position": [880, 0] },
+    { "name": "Cloudinary Upload", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "POST", "url": "={{ $env.CLOUDINARY_UPLOAD_ENDPOINT }}", "sendBody": true, "contentType": "multipart-form-data" }, "position": [1100, 0] },
+    { "name": "Supabase Insert", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "POST", "url": "={{ $env.SUPABASE_UPLOADS_ENDPOINT }}", "sendBody": true, "jsonParameters": true, "options": { "response": { "response": { "neverError": true } } } }, "position": [1320, 0] },
+    { "name": "Return URL", "type": "n8n-nodes-base.respondToWebhook", "parameters": { "respondWith": "json", "responseBody": "={\"resultUrl\": $json.secure_url, \"expiresAt\": $now.plus({ hours: 24 }).toISO()}" }, "position": [1540, 0] }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Payload Validation", "type": "main", "index": 0 }]] },
+    "Payload Validation": { "main": [[{ "node": "Cloudinary Fetch", "type": "main", "index": 0 }]] },
+    "Cloudinary Fetch": { "main": [[{ "node": "AI API Request", "type": "main", "index": 0 }]] },
+    "AI API Request": { "main": [[{ "node": "Response Validation", "type": "main", "index": 0 }]] },
+    "Response Validation": { "main": [[{ "node": "Cloudinary Upload", "type": "main", "index": 0 }]] },
+    "Cloudinary Upload": { "main": [[{ "node": "Supabase Insert", "type": "main", "index": 0 }]] },
+    "Supabase Insert": { "main": [[{ "node": "Return URL", "type": "main", "index": 0 }]] }
+  }
+}
