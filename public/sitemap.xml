@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>/</loc></url>
-  <url><loc>/workspace</loc></url>
-  <url><loc>/history</loc></url>
-  <url><loc>/billing</loc></url>
-  <url><loc>/api-keys</loc></url>
-  <url><loc>/admin</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/workspace</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/history</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/billing</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/api-keys</loc></url>
+  <url><loc>https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/admin</loc></url>
 </urlset>

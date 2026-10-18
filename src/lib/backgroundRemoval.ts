@@ -27,8 +27,10 @@ export async function validateImageDimensions(file: File): Promise<string | null
 }
 
 function averageCornerColor(data: Uint8ClampedArray, width: number, height: number) {
+  const safeX = Math.max(0, width - 2)
+  const safeY = Math.max(0, height - 2)
   const points = [
-    [1, 1], [width - 2, 1], [1, height - 2], [width - 2, height - 2],
+    [Math.min(1, safeX), Math.min(1, safeY)], [safeX, Math.min(1, safeY)], [Math.min(1, safeX), safeY], [safeX, safeY],
   ]
   let r = 0; let g = 0; let b = 0
   points.forEach(([x, y]) => {

@@ -9,6 +9,7 @@ export interface UploadRecord {
   createdAt: string
   status: 'Complete' | 'Processing' | 'Failed'
   type: string
+  resultUrl?: string
 }
 
 export interface ProcessingRequest {

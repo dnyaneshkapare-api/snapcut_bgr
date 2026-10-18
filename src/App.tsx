@@ -89,8 +89,13 @@ function App() {
 
   useEffect(() => {
     const onHashChange = () => setView(routeToView(window.location.hash.replace('#', '') || window.location.pathname))
+    const onPopState = () => setView(routeToView(window.location.pathname))
     window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    window.addEventListener('popstate', onPopState)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      window.removeEventListener('popstate', onPopState)
+    }
   }, [])
 
   useEffect(() => {
@@ -144,7 +149,12 @@ function App() {
       setErrorMessage(typeError)
       return
     }
-    const dimensionError = await validateImageDimensions(file)
+    let dimensionError: string | null = null
+    try {
+      dimensionError = await validateImageDimensions(file)
+    } catch {
+      dimensionError = 'We could not read that image. Try exporting it again as JPG, PNG, or WEBP.'
+    }
     if (dimensionError) {
       setUploadStage('error')
       setErrorMessage(dimensionError)
@@ -178,6 +188,7 @@ function App() {
         createdAt: 'Just now',
         status: 'Complete',
         type: fileType(selectedFile),
+        resultUrl: URL.createObjectURL(resultBlob),
       }
       setRecords((current) => [newRecord, ...current])
       setToast('Background removed. Your transparent PNG is ready.')
@@ -192,6 +203,18 @@ function App() {
     const anchor = document.createElement('a')
     anchor.href = resultUrl
     anchor.download = `${selectedFile.name.replace(/\.[^.]+$/, '')}-snapcut.png`
+    anchor.click()
+    setToast('Download started — your file is ready to use.')
+  }
+
+  const downloadRecord = (record: UploadRecord) => {
+    if (!record.resultUrl) {
+      setToast('This older asset is metadata-only in the preview. Process a new upload to download it here.')
+      return
+    }
+    const anchor = document.createElement('a')
+    anchor.href = record.resultUrl
+    anchor.download = `${record.name.replace(/\.[^.]+$/, '')}-snapcut.png`
     anchor.click()
     setToast('Download started — your file is ready to use.')
   }
@@ -254,7 +277,7 @@ function App() {
               onClear={clearOutput}
             />
           )}
-          {view === 'history' && <HistoryView records={records} onNavigate={setActiveView} />}
+          {view === 'history' && <HistoryView records={records} onNavigate={setActiveView} onDownload={downloadRecord} />}
           {view === 'billing' && <BillingView onToast={setToast} />}
           {view === 'api' && <ApiView copiedKey={copiedKey} onCopy={copyApiKey} />}
           {view === 'admin' && <AdminView />}
@@ -381,8 +404,8 @@ function ProductSignal() {
   return <section className="panel signal-panel"><div className="signal-orb"><Sparkles size={22} /></div><span className="eyebrow accent-eyebrow">SnapCut signal</span><h2>Your cleanest week yet.</h2><p>You’re processing <strong>18% more</strong> assets than last month. Keep shipping the sharp stuff.</p><div className="signal-chart"><span style={{ height: '37%' }} /><span style={{ height: '49%' }} /><span style={{ height: '45%' }} /><span style={{ height: '62%' }} /><span style={{ height: '58%' }} /><span style={{ height: '76%' }} /><span style={{ height: '91%' }} /></div><div className="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></section>
 }
 
-function HistoryView({ records, onNavigate }: { records: UploadRecord[]; onNavigate: (view: AppView) => void }) {
-  return <><section className="page-intro"><div><span className="eyebrow accent-eyebrow"><History size={13} /> Asset history</span><h1>Everything you’ve cut.</h1><p>Your last 7 days of processed images, organized and ready to download.</p></div><button className="primary-button" onClick={() => onNavigate('workspace')}><Plus size={16} /> New upload</button></section><section className="panel history-panel"><div className="table-toolbar"><div className="search-field"><Search size={16} /><input placeholder="Search uploads" /></div><button className="filter-button">Last 7 days <ChevronDown size={14} /></button><button className="icon-button"><MoreHorizontal size={17} /></button></div><div className="history-table"><div className="table-row table-heading"><span>Asset</span><span>Type</span><span>Added</span><span>Status</span><span /></div>{records.map((record) => <div className="table-row" key={record.id}><div className="asset-cell"><div className="thumb-placeholder"><FileImage size={16} /></div><strong>{record.name}</strong></div><span className="type-label">{record.type}</span><span className="table-muted">{record.createdAt}</span><span className="complete-badge"><CheckCircle2 size={13} /> {record.status}</span><button className="icon-button"><Download size={16} /></button></div>)}</div><div className="table-foot"><span>Showing {records.length} of {records.length} uploads</span><div><button className="pagination-button" disabled>Previous</button><button className="pagination-button">Next</button></div></div></section></>
+function HistoryView({ records, onNavigate, onDownload }: { records: UploadRecord[]; onNavigate: (view: AppView) => void; onDownload: (record: UploadRecord) => void }) {
+  return <><section className="page-intro"><div><span className="eyebrow accent-eyebrow"><History size={13} /> Asset history</span><h1>Everything you’ve cut.</h1><p>Your last 7 days of processed images, organized and ready to download.</p></div><button className="primary-button" onClick={() => onNavigate('workspace')}><Plus size={16} /> New upload</button></section><section className="panel history-panel"><div className="table-toolbar"><div className="search-field"><Search size={16} /><input placeholder="Search uploads" /></div><button className="filter-button">Last 7 days <ChevronDown size={14} /></button><button className="icon-button"><MoreHorizontal size={17} /></button></div><div className="history-table"><div className="table-row table-heading"><span>Asset</span><span>Type</span><span>Added</span><span>Status</span><span /></div>{records.map((record) => <div className="table-row" key={record.id}><div className="asset-cell"><div className="thumb-placeholder"><FileImage size={16} /></div><strong>{record.name}</strong></div><span className="type-label">{record.type}</span><span className="table-muted">{record.createdAt}</span><span className="complete-badge"><CheckCircle2 size={13} /> {record.status}</span><button className="icon-button" onClick={() => onDownload(record)} aria-label={`Download ${record.name}`}><Download size={16} /></button></div>)}</div><div className="table-foot"><span>Showing {records.length} of {records.length} uploads</span><div><button className="pagination-button" disabled>Previous</button><button className="pagination-button">Next</button></div></div></section></>
 }
 
 function BillingView({ onToast }: { onToast: (message: string) => void }) {

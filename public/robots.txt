@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Sitemap: /sitemap.xml
+Sitemap: https://8328-i00s5t9sprxplbunwh9cn-e631c38e.sg2.manus.computer/sitemap.xml

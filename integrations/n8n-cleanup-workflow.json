@@ -1,0 +1,15 @@
+{
+  "name": "SnapCut AI · Purge expired temporary assets",
+  "active": false,
+  "nodes": [
+    { "name": "Every hour", "type": "n8n-nodes-base.scheduleTrigger", "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] } }, "position": [0, 0] },
+    { "name": "Find expired uploads", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "GET", "url": "={{ $env.SUPABASE_EXPIRED_UPLOADS_ENDPOINT }}" }, "position": [240, 0] },
+    { "name": "Delete Cloudinary objects", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "POST", "url": "={{ $env.CLOUDINARY_DELETE_ENDPOINT }}", "sendBody": true, "jsonParameters": true }, "position": [480, 0] },
+    { "name": "Mark expired", "type": "n8n-nodes-base.httpRequest", "parameters": { "method": "PATCH", "url": "={{ $env.SUPABASE_MARK_EXPIRED_ENDPOINT }}", "sendBody": true, "jsonParameters": true }, "position": [720, 0] }
+  ],
+  "connections": {
+    "Every hour": { "main": [[{ "node": "Find expired uploads", "type": "main", "index": 0 }]] },
+    "Find expired uploads": { "main": [[{ "node": "Delete Cloudinary objects", "type": "main", "index": 0 }]] },
+    "Delete Cloudinary objects": { "main": [[{ "node": "Mark expired", "type": "main", "index": 0 }]] }
+  }
+}
